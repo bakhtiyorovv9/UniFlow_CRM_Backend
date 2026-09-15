@@ -1,5 +1,8 @@
 allowBuilds:
   '@parcel/watcher': true
-  '@prisma/engines': set this to true or false
-  prisma: set this to true or false
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  bcrypt: true
+  esbuild: true
+  prisma: true
   unrs-resolver: true
