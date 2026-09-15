@@ -5,15 +5,21 @@ import { JwtAuthGuard, RolesGuard } from './common/guards/index.js';
 import { PrismaModule } from './core/database/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
-// import { RoomsModule } from './modules/rooms/rooms.module.js';
+import { RoomsModule } from './modules/rooms/rooms.module.js';
+import { CoursesModule } from './modules/courses/courses.module.js';
+import { TeachersModule } from './modules/teachers/teachers.module.js';
+import { StudentsModule } from './modules/students/students.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
-    // RoomsModule,
-    UsersModule
+    RoomsModule,
+    UsersModule,
+    CoursesModule,
+    TeachersModule,
+    StudentsModule
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
