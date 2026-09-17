@@ -68,10 +68,7 @@ export class UsersController {
   @Delete(':id')
   @ApiOperation({ summary: 'Xodimni oʻchirish' })
   @ApiOkResponse({ description: 'Oʻchirildi' })
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthUser,
-  ) {
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.usersService.remove(id, user);
   }
 }

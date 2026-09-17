@@ -54,10 +54,7 @@ export class CoursesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Kursni yangilash' })
   @ApiOkResponse({ description: 'Yangilandi' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCourseDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCourseDto) {
     return this.coursesService.update(id, dto);
   }
 

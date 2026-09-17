@@ -10,7 +10,10 @@ import {
 } from 'class-validator';
 
 export class CreateCourseDto {
-  @ApiProperty({ example: 'Node.js Backend', description: 'Kurs nomi (unique)' })
+  @ApiProperty({
+    example: 'Node.js Backend',
+    description: 'Kurs nomi (unique)',
+  })
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -31,7 +34,7 @@ export class CreateCourseDto {
   @Min(1)
   duration_hours: number;
 
-  @ApiProperty({ example: 6, description: "Oylar soni", minimum: 1 })
+  @ApiProperty({ example: 6, description: 'Oylar soni', minimum: 1 })
   @IsInt()
   @Min(1)
   duration_month: number;

@@ -54,10 +54,7 @@ export class RoomsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Xonani yangilash' })
   @ApiOkResponse({ description: 'Yangilandi' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateRoomDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateRoomDto) {
     return this.roomsService.update(id, dto);
   }
 

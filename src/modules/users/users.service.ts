@@ -19,7 +19,7 @@ export class UsersService {
   async create(dto: CreateUserDto, currentUser: AuthUser) {
     if (dto.role === Role.SUPERADMIN && currentUser.role !== Role.SUPERADMIN) {
       throw new ForbiddenException(
-        "Faqat SUPERADMIN yangi SUPERADMIN yarata oladi",
+        'Faqat SUPERADMIN yangi SUPERADMIN yarata oladi',
       );
     }
 
@@ -75,7 +75,7 @@ export class UsersService {
   async update(id: number, dto: UpdateUserDto, currentUser: AuthUser) {
     if (dto.role === Role.SUPERADMIN && currentUser.role !== Role.SUPERADMIN) {
       throw new ForbiddenException(
-        "Faqat SUPERADMIN rolni SUPERADMIN qila oladi",
+        'Faqat SUPERADMIN rolni SUPERADMIN qila oladi',
       );
     }
 
