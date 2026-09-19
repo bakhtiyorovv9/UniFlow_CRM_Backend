@@ -11,7 +11,7 @@ export class CreateGroupTeacherDto {
 
   @ApiProperty({
     example: 1,
-    description: 'Oʻqituvchi id (Teacher jadvalidan)',
+    description: "O'qituvchi id (Teacher jadvalidan)",
   })
   @Type(() => Number)
   @IsInt()

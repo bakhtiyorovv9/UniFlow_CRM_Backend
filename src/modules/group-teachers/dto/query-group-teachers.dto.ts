@@ -10,13 +10,13 @@ export class QueryGroupTeachersDto extends PaginationDto {
   @IsEnum(TeacherGroupStatus)
   status?: TeacherGroupStatus;
 
-  @ApiPropertyOptional({ description: 'Guruh boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Guruh bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   group_id?: number;
 
-  @ApiPropertyOptional({ description: 'Oʻqituvchi boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "O'qituvchi bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

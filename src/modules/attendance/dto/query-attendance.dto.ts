@@ -4,13 +4,13 @@ import { IsInt, IsOptional } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto.js';
 
 export class QueryAttendanceDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Guruh boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Guruh bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   group_id?: number;
 
-  @ApiPropertyOptional({ description: 'Talaba boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Talaba bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

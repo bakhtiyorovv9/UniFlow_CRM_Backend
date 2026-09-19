@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,6 +8,7 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { Role } from '../../common/enums/index.js';
 import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { ensureTeacherInGroup } from '../../common/utils/ensure-teacher-in-group.js';
+import { ensureGroupOpen } from '../../common/utils/group-rules.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { CreateHomeworkDto } from './dto/create-homeworks.dto.js';
 import { QueryHomeworksDto } from './dto/query-homeworks.dto.js';
@@ -18,6 +20,18 @@ export class HomeworksService {
 
   async create(dto: CreateHomeworkDto, currentUser: AuthUser) {
     const authorData = await this.resolveAuthor(currentUser, dto.group_id);
+    await ensureGroupOpen(this.prisma, dto.group_id);
+    if (dto.lesson_id) {
+      const lesson = await this.prisma.lesson.findUnique({
+        where: { id: dto.lesson_id },
+        select: { group_id: true },
+      });
+      if (!lesson || lesson.group_id !== dto.group_id) {
+        throw new BadRequestException(
+          'Tanlangan dars bu guruhga tegishli emas',
+        );
+      }
+    }
 
     return this.prisma.homework.create({
       data: {
@@ -111,8 +125,6 @@ export class HomeworksService {
     return this.prisma.homework.delete({ where: { id } });
   }
 
-  // === yordamchi ===
-
   private async resolveAuthor(currentUser: AuthUser, group_id: number) {
     if (currentUser.role === Role.TEACHER) {
       await ensureTeacherInGroup(this.prisma, currentUser.id, group_id);
@@ -167,7 +179,6 @@ export class HomeworksService {
       return { group_id: { in: links.map((l) => l.group_id) } };
     }
 
-    // STUDENT
     const links = await this.prisma.studentGroup.findMany({
       where: { student_id: currentUser.id, status: 'active' },
       select: { group_id: true },

@@ -32,16 +32,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Yangi xodim (ADMIN/SUPERADMIN) qoʻshish' })
+  @ApiOperation({ summary: "Yangi xodim (ADMIN/SUPERADMIN) qo'shish" })
   @ApiCreatedResponse({ description: 'Xodim yaratildi' })
-  @ApiForbiddenResponse({ description: 'Ruxsat yoʻq' })
+  @ApiForbiddenResponse({ description: "Ruxsat yo'q" })
   create(@Body() dto: CreateUserDto, @CurrentUser() user: AuthUser) {
     return this.usersService.create(dto, user);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Xodimlar roʻyxati (sahifalash + qidiruv)' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Xodimlar ro'yxati (sahifalash + qidiruv)" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryUsersDto) {
     return this.usersService.findAll(query);
   }
@@ -66,8 +66,8 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Xodimni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Xodimni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.usersService.remove(id, user);
   }

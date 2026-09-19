@@ -10,13 +10,13 @@ export class QueryHomeworkAnswersDto extends PaginationDto {
   @IsEnum(HomeworkStatus)
   homeworkStatus?: HomeworkStatus;
 
-  @ApiPropertyOptional({ description: 'Vazifa boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Vazifa bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   homework_id?: number;
 
-  @ApiPropertyOptional({ description: 'Talaba boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Talaba bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

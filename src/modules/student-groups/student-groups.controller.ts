@@ -34,15 +34,15 @@ export class StudentGroupsController {
   @Post()
   @ApiOperation({ summary: 'Talabani guruhga biriktirish' })
   @ApiCreatedResponse({ description: 'Biriktirildi' })
-  @ApiBadRequestResponse({ description: 'Guruh toʻlgan' })
+  @ApiBadRequestResponse({ description: "Guruh to'lgan" })
   @ApiConflictResponse({ description: 'Talaba allaqachon shu guruhda' })
   create(@Body() dto: CreateStudentGroupDto) {
     return this.studentGroupsService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Biriktirishlar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Biriktirishlar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryStudentGroupsDto) {
     return this.studentGroupsService.findAll(query);
   }
@@ -56,7 +56,7 @@ export class StudentGroupsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Statusni oʻzgartirish (active/inactive/freeze)' })
+  @ApiOperation({ summary: "Statusni o'zgartirish (active/inactive/freeze)" })
   @ApiOkResponse({ description: 'Yangilandi' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -66,8 +66,8 @@ export class StudentGroupsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Biriktirishni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Biriktirishni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.studentGroupsService.remove(id);
   }

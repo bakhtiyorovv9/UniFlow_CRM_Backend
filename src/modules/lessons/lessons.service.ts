@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,6 +8,10 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { Role } from '../../common/enums/index.js';
 import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { ensureTeacherInGroup } from '../../common/utils/ensure-teacher-in-group.js';
+import {
+  ensureGroupOpen,
+  tashkentDayRange,
+} from '../../common/utils/group-rules.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { CreateLessonDto } from './dto/create-lessons.dto.js';
 import { QueryLessonsDto } from './dto/query-lessons.dto.js';
@@ -17,8 +22,18 @@ export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateLessonDto, currentUser: AuthUser) {
-    // Egalik qoidasi: TEACHER faqat oʻz guruhida
     const authorData = await this.resolveAuthor(currentUser, dto.group_id);
+    await ensureGroupOpen(this.prisma, dto.group_id);
+    const { start, end } = tashkentDayRange(new Date());
+    const today = await this.prisma.lesson.findFirst({
+      where: { group_id: dto.group_id, created_at: { gte: start, lt: end } },
+      select: { topic: true },
+    });
+    if (today) {
+      throw new BadRequestException(
+        `Bu guruhga bugun dars allaqachon qo'shilgan: "${today.topic}". Uni tahrirlang`,
+      );
+    }
 
     return this.prisma.lesson.create({
       data: {
@@ -46,7 +61,6 @@ export class LessonsService {
           { description: { contains: search, mode: 'insensitive' } },
         ],
       }),
-      // Egalik filtri
       ...(await this.buildAccessFilter(currentUser)),
     };
 
@@ -89,6 +103,7 @@ export class LessonsService {
     if (currentUser.role === Role.TEACHER) {
       await ensureTeacherInGroup(this.prisma, currentUser.id, lesson.group_id);
     }
+    await ensureGroupOpen(this.prisma, lesson.group_id);
 
     return this.prisma.lesson.update({
       where: { id },
@@ -110,14 +125,11 @@ export class LessonsService {
     return this.prisma.lesson.delete({ where: { id } });
   }
 
-  // === yordamchi metodlar ===
-
   private async resolveAuthor(currentUser: AuthUser, group_id: number) {
     if (currentUser.role === Role.TEACHER) {
       await ensureTeacherInGroup(this.prisma, currentUser.id, group_id);
       return { teacher_id: currentUser.id, user_id: null };
     }
-    // ADMIN / SUPERADMIN
     return { user_id: currentUser.id, teacher_id: null };
   }
 
@@ -166,7 +178,6 @@ export class LessonsService {
       return { group_id: { in: links.map((l) => l.group_id) } };
     }
 
-    // STUDENT
     const links = await this.prisma.studentGroup.findMany({
       where: { student_id: currentUser.id, status: 'active' },
       select: { group_id: true },

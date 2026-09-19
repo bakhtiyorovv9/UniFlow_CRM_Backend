@@ -44,9 +44,9 @@ export class HomeworkAnswersController {
   @Get()
   @ApiOperation({
     summary:
-      'Javoblar roʻyxati (STUDENT — oʻzinikilari, TEACHER — oʻz guruhlari, ADMIN — hammasi)',
+      "Javoblar ro'yxati (STUDENT — o'zinikilari, TEACHER — o'z guruhlari, ADMIN — hammasi)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(
     @Query() query: QueryHomeworkAnswersDto,
     @CurrentUser() user: AuthUser,
@@ -68,7 +68,7 @@ export class HomeworkAnswersController {
   @Patch(':id')
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({
-    summary: 'Javob statusini oʻzgartirish (ACCEPTED/REJECTED/CHECKED)',
+    summary: "Javob statusini o'zgartirish (ACCEPTED/REJECTED/CHECKED)",
   })
   @ApiOkResponse({ description: 'Yangilandi' })
   update(
@@ -80,8 +80,8 @@ export class HomeworkAnswersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Javobni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Javobni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.homeworkAnswersService.remove(id, user);
   }

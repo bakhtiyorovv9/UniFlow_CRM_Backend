@@ -15,7 +15,6 @@ export class HomeworkResultsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async upsert(dto: CreateHomeworkResultDto, currentUser: AuthUser) {
-    // Javobni topib, homework va group_id ni olamiz
     const answer = await this.prisma.homeworkAnswerStudent.findUnique({
       where: { id: dto.homework_answer_id },
       include: {
@@ -24,17 +23,14 @@ export class HomeworkResultsService {
     });
     if (!answer) throw new NotFoundException('Javob topilmadi');
     if (!answer.homework.group_id) {
-      throw new NotFoundException('Vazifa guruhga bogʻlanmagan');
+      throw new NotFoundException("Vazifa guruhga bog'lanmagan");
     }
 
     const group_id = answer.homework.group_id;
     const homework_id = answer.homework.id;
 
-    // Egalik qoidasi: TEACHER faqat oʻz guruhi
     const authorData = await this.resolveAuthor(currentUser, group_id);
 
-    // upsert: shu javobga shu foydalanuvchi tomonidan qoʻyilgan baho bormi?
-    // Unique kaliti: (homework_answer_id, teacher_id, user_id, group_id, homework_id)
     const existing = await this.prisma.homeworkResult.findFirst({
       where: {
         homework_answer_id: dto.homework_answer_id,
@@ -46,8 +42,7 @@ export class HomeworkResultsService {
     });
 
     if (existing) {
-      // Yangilash
-      return this.prisma.homeworkResult.update({
+      const updated = await this.prisma.homeworkResult.update({
         where: { id: existing.id },
         data: {
           grade: dto.grade,
@@ -55,9 +50,13 @@ export class HomeworkResultsService {
           homeworkStatus: dto.homeworkStatus,
         },
       });
+      await this.prisma.homeworkAnswerStudent.update({
+        where: { id: dto.homework_answer_id },
+        data: { homeworkStatus: dto.homeworkStatus },
+      });
+      return updated;
     }
 
-    // Yangi yaratish
     const created = await this.prisma.homeworkResult.create({
       data: {
         homework_answer_id: dto.homework_answer_id,
@@ -70,7 +69,6 @@ export class HomeworkResultsService {
       },
     });
 
-    // Ayni paytda javobning statusini ham yangilaymiz — shunda talaba koʻradi
     await this.prisma.homeworkAnswerStudent.update({
       where: { id: dto.homework_answer_id },
       data: { homeworkStatus: dto.homeworkStatus },
@@ -130,8 +128,6 @@ export class HomeworkResultsService {
     return this.prisma.homeworkResult.delete({ where: { id } });
   }
 
-  // === yordamchi ===
-
   private async resolveAuthor(currentUser: AuthUser, group_id: number) {
     if (currentUser.role === Role.TEACHER) {
       await ensureTeacherInGroup(this.prisma, currentUser.id, group_id);
@@ -179,7 +175,6 @@ export class HomeworkResultsService {
       };
     }
 
-    // TEACHER
     const links = await this.prisma.groupTeacher.findMany({
       where: { teacher_id: currentUser.id, status: 'active' },
       select: { group_id: true },

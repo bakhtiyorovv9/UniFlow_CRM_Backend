@@ -6,13 +6,18 @@ import { join } from 'node:path';
 import { AppModule } from './app.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 
-// import basicAuth from 'express-basic-auth';
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: true, credentials: true });
+  const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.enableCors({
+    origin: corsOrigins.length ? corsOrigins : true,
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,15 +27,6 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
-
-  // Swagger SAFE
-  // app.use(
-  //   '/api/docs',
-  //   basicAuth({
-  //     challenge: true,
-  //     users: { admin: process.env.SWAGGER_PASSWORD ?? '1234' },
-  //   }),
-  // );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('UniFlow API')

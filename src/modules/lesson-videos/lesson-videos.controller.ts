@@ -32,7 +32,6 @@ import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { CreateLessonVideoDto } from './dto/create-lesson-videos.dto.js';
 import { LessonVideosService } from './lesson-videos.service.js';
 
-// Ruxsat etilgan kengaytmalar
 const ALLOWED_EXT = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
 
 class ListQueryDto {
@@ -71,7 +70,7 @@ export class LessonVideosController {
     },
   })
   @ApiCreatedResponse({ description: 'Video yuklandi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -82,7 +81,7 @@ export class LessonVideosController {
         },
       }),
       limits: {
-        fileSize: 500 * 1024 * 1024, // 500 MB
+        fileSize: 500 * 1024 * 1024,
       },
       fileFilter: (_req, file, cb) => {
         const ext = extname(file.originalname).toLowerCase();
@@ -109,9 +108,9 @@ export class LessonVideosController {
   @Get()
   @ApiOperation({
     summary:
-      'Videolar roʻyxati (ADMIN — hammasi, TEACHER va STUDENT — oʻz guruhlari)',
+      "Videolar ro'yxati (ADMIN — hammasi, TEACHER va STUDENT — o'z guruhlari)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: ListQueryDto, @CurrentUser() user: AuthUser) {
     return this.lessonVideosService.findAll(user, query.lesson_id);
   }
@@ -129,8 +128,8 @@ export class LessonVideosController {
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Videoni oʻchirish (bazadan va diskdan)' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Videoni o'chirish (bazadan va diskdan)" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.lessonVideosService.remove(id, user);
   }

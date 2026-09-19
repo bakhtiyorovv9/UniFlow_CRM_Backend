@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -30,15 +31,15 @@ export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Yangi talaba qoʻshish' })
+  @ApiOperation({ summary: "Yangi talaba qo'shish" })
   @ApiCreatedResponse({ description: 'Talaba yaratildi' })
   create(@Body() dto: CreateStudentDto) {
     return this.studentsService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Talabalar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Talabalar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryStudentsDto) {
     return this.studentsService.findAll(query);
   }
@@ -58,9 +59,30 @@ export class StudentsController {
     return this.studentsService.update(id, dto);
   }
 
+  @Patch(':id/archive')
+  @ApiOperation({
+    summary: 'Talabani arxivga yuborish (guruhlardan chiqariladi)',
+  })
+  @ApiOkResponse({ description: 'Arxivga yuborildi' })
+  @ApiBadRequestResponse({ description: 'Allaqachon arxivda' })
+  archive(@Param('id', ParseIntPipe) id: number) {
+    return this.studentsService.archive(id);
+  }
+
+  @Patch(':id/restore')
+  @ApiOperation({ summary: 'Talabani arxivdan tiklash' })
+  @ApiOkResponse({ description: 'Tiklandi' })
+  @ApiBadRequestResponse({ description: 'Arxivda emas' })
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.studentsService.restore(id);
+  }
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Talabani oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({
+    summary: "Talabani butunlay o'chirish (faqat arxivdagilar)",
+  })
+  @ApiOkResponse({ description: "O'chirildi" })
+  @ApiBadRequestResponse({ description: 'Avval arxivga yuborish kerak' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.studentsService.remove(id);
   }

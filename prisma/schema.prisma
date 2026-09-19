@@ -78,9 +78,12 @@ model User {
   update_at       DateTime         @default(now())
   photo           String?
   attendances     Attendance[]
+  payments        Payment[]
   homework        Homework[]
   homeworkResults HomeworkResult[]
   lessons         Lesson[]
+  exams           Exam[]
+  examResults     ExamResult[]
 }
 
 model Student {
@@ -94,10 +97,13 @@ model Student {
   created_at             DateTime                @default(now())
   update_at              DateTime                @default(now())
   photo                  String?
+  archived_at            DateTime?
   full_name              String
   attendances            Attendance[]
+  payments               Payment[]
   homeworkAnswerStudents HomeworkAnswerStudent[]
   studentGroups          StudentGroup[]
+  examResults            ExamResult[]
 }
 
 model Teacher {
@@ -110,12 +116,15 @@ model Teacher {
   created_at      DateTime         @default(now())
   update_at       DateTime         @default(now())
   photo           String?
+  archived_at     DateTime?
   full_name       String
   attendances     Attendance[]
   GroupTeacher    GroupTeacher[]
   homework        Homework[]
   homeworkResults HomeworkResult[]
   lessons         Lesson[]
+  exams           Exam[]
+  examResults     ExamResult[]
 }
 
 model Course {
@@ -161,8 +170,10 @@ model Group {
   lessons         Lesson[]
   studentGroups   StudentGroup[]
   attendances     Attendance[]
+  payments        Payment[]
   homeworkResults HomeworkResult[]
   lessonVideos    LessonVideo[]
+  exams           Exam[]
 }
 
 model StudentGroup {
@@ -286,4 +297,65 @@ model LessonVideo {
   update_at    DateTime @updatedAt
   lesson       Lesson   @relation(fields: [lesson_id], references: [id])
   groups       Group    @relation(fields: [group_id], references: [id])
+}
+
+model Payment {
+  id         Int      @id @default(autoincrement())
+  student_id Int
+  group_id   Int?
+  user_id    Int?
+  amount     Int
+  paid_at    DateTime @default(now())
+  note       String?
+  created_at DateTime @default(now())
+  update_at  DateTime @updatedAt
+  students   Student  @relation(fields: [student_id], references: [id])
+  groups     Group?   @relation(fields: [group_id], references: [id], onDelete: SetNull)
+  users      User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([paid_at])
+  @@index([student_id])
+}
+
+model Exam {
+  id          Int          @id @default(autoincrement())
+  group_id    Int
+  teacher_id  Int?
+  user_id     Int?
+  title       String
+  description String?
+  exam_date   DateTime
+  end_date    DateTime?
+  max_score   Int          @default(100)
+  pass_score  Int          @default(60)
+  created_at  DateTime     @default(now())
+  update_at   DateTime     @updatedAt
+  groups      Group        @relation(fields: [group_id], references: [id])
+  teachers    Teacher?     @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
+  users       User?        @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  results     ExamResult[]
+
+  @@index([group_id])
+}
+
+model ExamResult {
+  id           Int       @id @default(autoincrement())
+  exam_id      Int
+  student_id   Int
+  teacher_id   Int?
+  user_id      Int?
+  attended     Boolean
+  score        Int?
+  comment      String?
+  answer_text  String?
+  answer_file  String?
+  submitted_at DateTime?
+  created_at   DateTime  @default(now())
+  update_at    DateTime  @updatedAt
+  exam         Exam      @relation(fields: [exam_id], references: [id], onDelete: Cascade)
+  students     Student   @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  teachers     Teacher?  @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
+  users        User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@unique([exam_id, student_id])
 }

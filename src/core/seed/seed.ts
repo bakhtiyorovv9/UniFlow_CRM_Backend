@@ -10,9 +10,14 @@ async function main() {
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 
-  const email = process.env.ADMIN_EMAIL ?? 'admin@gmail.com';
-  const password = process.env.ADMIN_PASSWORD ?? '123456';
-  const phone = process.env.ADMIN_PHONE ?? '+998914273095';
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  const phone = process.env.ADMIN_PHONE;
+  if (!email || !password || !phone) {
+    throw new Error(
+      '.env faylida ADMIN_EMAIL, ADMIN_PASSWORD va ADMIN_PHONE berilishi kerak',
+    );
+  }
 
   try {
     const existing = await prisma.user.findFirst({

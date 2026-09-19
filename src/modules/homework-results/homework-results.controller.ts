@@ -31,10 +31,10 @@ export class HomeworkResultsController {
   @Post()
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({
-    summary: 'Javobga baho qoʻyish (upsert — takror yuborilsa, yangilanadi)',
+    summary: "Javobga baho qo'yish (upsert — takror yuborilsa, yangilanadi)",
   })
   @ApiCreatedResponse({ description: 'Baho saqlandi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   upsert(@Body() dto: CreateHomeworkResultDto, @CurrentUser() user: AuthUser) {
     return this.homeworkResultsService.upsert(dto, user);
   }
@@ -42,9 +42,9 @@ export class HomeworkResultsController {
   @Get()
   @ApiOperation({
     summary:
-      'Baholar roʻyxati (STUDENT — oʻzinikilari, TEACHER — oʻz guruhlari, ADMIN — hammasi)',
+      "Baholar ro'yxati (STUDENT — o'zinikilari, TEACHER — o'z guruhlari, ADMIN — hammasi)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@CurrentUser() user: AuthUser) {
     return this.homeworkResultsService.findAll(user);
   }
@@ -62,8 +62,8 @@ export class HomeworkResultsController {
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Bahoni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Bahoni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.homeworkResultsService.remove(id, user);
   }

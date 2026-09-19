@@ -33,10 +33,11 @@ export class AttendanceController {
   @Post()
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({
-    summary: 'Butun guruh davomatini yozish (bir necha talaba birdaniga)',
+    summary:
+      'Butun guruh davomatini yozish. TEACHER bugun saqlangan davomatni qayta yoza olmaydi',
   })
   @ApiCreatedResponse({ description: 'Yozildi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   create(@Body() dto: CreateAttendanceDto, @CurrentUser() user: AuthUser) {
     return this.attendanceService.create(dto, user);
   }
@@ -44,9 +45,9 @@ export class AttendanceController {
   @Get()
   @ApiOperation({
     summary:
-      'Davomat roʻyxati (ADMIN — hammasi, TEACHER — oʻz guruhlari, STUDENT — oʻz yozuvlari)',
+      "Davomat ro'yxati (ADMIN — hammasi, TEACHER — o'z guruhlari, STUDENT — o'z yozuvlari)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryAttendanceDto, @CurrentUser() user: AuthUser) {
     return this.attendanceService.findAll(query, user);
   }
@@ -63,8 +64,10 @@ export class AttendanceController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Davomat yozuvini yangilash (isPresent)' })
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @ApiOperation({
+    summary: 'Davomat yozuvini yangilash (isPresent) — faqat adminlar',
+  })
   @ApiOkResponse({ description: 'Yangilandi' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -75,9 +78,9 @@ export class AttendanceController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Yozuvni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @ApiOperation({ summary: "Yozuvni o'chirish — faqat adminlar" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.attendanceService.remove(id, user);
   }

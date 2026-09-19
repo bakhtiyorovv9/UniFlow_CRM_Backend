@@ -30,15 +30,15 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Yangi kurs qoʻshish' })
+  @ApiOperation({ summary: "Yangi kurs qo'shish" })
   @ApiCreatedResponse({ description: 'Kurs yaratildi' })
   create(@Body() dto: CreateCourseDto) {
     return this.coursesService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Kurslar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Kurslar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryCoursesDto) {
     return this.coursesService.findAll(query);
   }
@@ -59,8 +59,8 @@ export class CoursesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Kursni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Kursni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.coursesService.remove(id);
   }

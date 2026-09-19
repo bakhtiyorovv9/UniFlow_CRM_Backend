@@ -6,7 +6,7 @@ export class UpdateHomeworkAnswerDto {
   @ApiProperty({
     enum: HomeworkStatus,
     example: HomeworkStatus.ACCEPTED,
-    description: 'Faqat oʻqituvchi | admin oʻzgartiradi',
+    description: "Faqat o'qituvchi | admin o'zgartiradi",
   })
   @IsEnum(HomeworkStatus)
   homeworkStatus: HomeworkStatus;

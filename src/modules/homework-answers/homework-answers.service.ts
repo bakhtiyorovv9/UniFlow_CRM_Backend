@@ -7,6 +7,10 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { Role } from '../../common/enums/index.js';
 import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { ensureTeacherInGroup } from '../../common/utils/ensure-teacher-in-group.js';
+import {
+  ensureGroupOpen,
+  homeworkDeadline,
+} from '../../common/utils/group-rules.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { CreateHomeworkAnswerDto } from './dto/create-homework-answers.dto.js';
 import { QueryHomeworkAnswersDto } from './dto/query-homework-answers.dto.js';
@@ -17,19 +21,19 @@ export class HomeworkAnswersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateHomeworkAnswerDto, currentUser: AuthUser) {
-    // Faqat STUDENT javob yuboradi (controller Roles ham cheklaydi)
     if (currentUser.role !== Role.STUDENT) {
       throw new ForbiddenException('Faqat talaba javob yuborishi mumkin');
     }
 
-    // Talaba shu vazifaning guruhida borligini tekshirish
     const homework = await this.prisma.homework.findUnique({
       where: { id: dto.homework_id },
-      select: { group_id: true },
+      select: { group_id: true, created_at: true },
     });
     if (!homework) throw new NotFoundException('Vazifa topilmadi');
+    const late = Date.now() > homeworkDeadline(homework.created_at).getTime();
 
     if (homework.group_id) {
+      await ensureGroupOpen(this.prisma, homework.group_id);
       const link = await this.prisma.studentGroup.findFirst({
         where: {
           student_id: currentUser.id,
@@ -42,16 +46,33 @@ export class HomeworkAnswersService {
       }
     }
 
-    return this.prisma.homeworkAnswerStudent.create({
+    const answer = await this.prisma.homeworkAnswerStudent.create({
       data: {
         ...dto,
         student_id: currentUser.id,
+        ...(late && { homeworkStatus: 'REJECTED' as const }),
       },
       include: {
         homework: { select: { id: true, title: true, group_id: true } },
         students: { select: { id: true, full_name: true } },
       },
     });
+
+    if (late && homework.group_id) {
+      await this.prisma.homeworkResult.create({
+        data: {
+          homework_answer_id: answer.id,
+          homework_id: dto.homework_id,
+          group_id: homework.group_id,
+          grade: 0,
+          title:
+            "Topshirish muddati (24 soat) o'tib ketgan. Javob avtomatik qaytarildi",
+          homeworkStatus: 'REJECTED',
+        },
+      });
+    }
+
+    return { ...answer, late };
   }
 
   async findAll(query: QueryHomeworkAnswersDto, currentUser: AuthUser) {
@@ -79,7 +100,18 @@ export class HomeworkAnswersService {
         orderBy: { created_at: 'desc' },
         include: {
           homework: { select: { id: true, title: true, group_id: true } },
-          students: { select: { id: true, full_name: true } },
+          students: { select: { id: true, full_name: true, photo: true } },
+          homeworkResults: {
+            orderBy: { update_at: 'desc' },
+            take: 1,
+            select: {
+              id: true,
+              grade: true,
+              title: true,
+              homeworkStatus: true,
+              update_at: true,
+            },
+          },
         },
       }),
       this.prisma.homeworkAnswerStudent.count({ where }),
@@ -114,7 +146,6 @@ export class HomeworkAnswersService {
     });
     if (!answer) throw new NotFoundException('Javob topilmadi');
 
-    // TEACHER faqat oʻz guruhidagi javobga tegishi mumkin
     if (currentUser.role === Role.TEACHER && answer.homework.group_id) {
       await ensureTeacherInGroup(
         this.prisma,
@@ -136,7 +167,6 @@ export class HomeworkAnswersService {
     });
     if (!answer) throw new NotFoundException('Javob topilmadi');
 
-    // Student faqat oʻz javobini oʻchira oladi
     if (
       currentUser.role === Role.STUDENT &&
       answer.student_id !== currentUser.id
@@ -153,8 +183,6 @@ export class HomeworkAnswersService {
 
     return this.prisma.homeworkAnswerStudent.delete({ where: { id } });
   }
-
-  // === yordamchi ===
 
   private async ensureCanView(
     currentUser: AuthUser,
@@ -197,7 +225,6 @@ export class HomeworkAnswersService {
       return { student_id: currentUser.id };
     }
 
-    // TEACHER — faqat o'z guruhi vazifalari javoblari
     const links = await this.prisma.groupTeacher.findMany({
       where: { teacher_id: currentUser.id, status: 'active' },
       select: { group_id: true },

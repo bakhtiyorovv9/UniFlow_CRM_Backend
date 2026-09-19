@@ -34,7 +34,7 @@ export class LessonsController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Yangi dars yaratish' })
   @ApiCreatedResponse({ description: 'Dars yaratildi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   create(@Body() dto: CreateLessonDto, @CurrentUser() user: AuthUser) {
     return this.lessonsService.create(dto, user);
   }
@@ -42,9 +42,9 @@ export class LessonsController {
   @Get()
   @ApiOperation({
     summary:
-      'Darslar roʻyxati (ADMIN — hammasi, TEACHER va STUDENT — faqat oʻz guruhlari)',
+      "Darslar ro'yxati (ADMIN — hammasi, TEACHER va STUDENT — faqat o'z guruhlari)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryLessonsDto, @CurrentUser() user: AuthUser) {
     return this.lessonsService.findAll(query, user);
   }
@@ -53,7 +53,7 @@ export class LessonsController {
   @ApiOperation({ summary: 'Bitta dars' })
   @ApiOkResponse({ description: 'Dars' })
   @ApiNotFoundResponse({ description: 'Topilmadi' })
-  @ApiForbiddenResponse({ description: 'Bu darsga kirish huquqingiz yoʻq' })
+  @ApiForbiddenResponse({ description: "Bu darsga kirish huquqingiz yo'q" })
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthUser,
@@ -65,7 +65,7 @@ export class LessonsController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Darsni yangilash' })
   @ApiOkResponse({ description: 'Yangilandi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateLessonDto,
@@ -76,8 +76,8 @@ export class LessonsController {
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Darsni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Darsni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.lessonsService.remove(id, user);
   }

@@ -16,7 +16,7 @@ export class CreateHomeworkAnswerDto {
 
   @ApiPropertyOptional({
     example: 'https://example.com/my-answer.pdf',
-    description: 'Fayl URL yoki yoʻli',
+    description: "Fayl URL yoki yo'li",
   })
   @IsOptional()
   @IsString()

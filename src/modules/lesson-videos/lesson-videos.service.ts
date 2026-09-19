@@ -10,6 +10,7 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { Role } from '../../common/enums/index.js';
 import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { ensureTeacherInGroup } from '../../common/utils/ensure-teacher-in-group.js';
+import { ensureGroupOpen } from '../../common/utils/group-rules.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
 
 @Injectable()
@@ -25,18 +26,22 @@ export class LessonVideosService {
       throw new BadRequestException('Video fayl yuborilmagan');
     }
 
-    // Darsni topish va group_id ni olish
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lesson_id },
       select: { id: true, group_id: true },
     });
     if (!lesson) {
-      // Fayl saqlangan bo'lishi mumkin, o'chirib tashlaymiz
       await unlink(file.path).catch(() => {});
       throw new NotFoundException('Dars topilmadi');
     }
 
-    // Egalik qoidasi
+    try {
+      await ensureGroupOpen(this.prisma, lesson.group_id);
+    } catch (e) {
+      await unlink(file.path).catch(() => {});
+      throw e;
+    }
+
     if (currentUser.role === Role.TEACHER) {
       try {
         await ensureTeacherInGroup(
@@ -96,18 +101,14 @@ export class LessonVideosService {
       await ensureTeacherInGroup(this.prisma, currentUser.id, video.group_id);
     }
 
-    // Avval bazadan, keyin diskdan
     await this.prisma.lessonVideo.delete({ where: { id } });
 
-    // video_url = "/uploads/videos/xxx.mp4" → faqat fayl nomi
     const filename = video.video_url.replace('/uploads/videos/', '');
     const filepath = join(process.cwd(), 'uploads', 'videos', filename);
     await unlink(filepath).catch(() => {});
 
     return { deleted: true, id };
   }
-
-  // === yordamchi ===
 
   private async ensureCanView(currentUser: AuthUser, group_id: number) {
     if (
@@ -154,7 +155,6 @@ export class LessonVideosService {
       return { group_id: { in: links.map((l) => l.group_id) } };
     }
 
-    // STUDENT
     const links = await this.prisma.studentGroup.findMany({
       where: { student_id: currentUser.id, status: 'active' },
       select: { group_id: true },

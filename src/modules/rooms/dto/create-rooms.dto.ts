@@ -10,7 +10,7 @@ export class CreateRoomDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 20, description: 'Sigʻimi (kishi)', minimum: 1 })
+  @ApiProperty({ example: 20, description: "Sig'imi (kishi)", minimum: 1 })
   @IsInt()
   @Min(1)
   capacity: number;

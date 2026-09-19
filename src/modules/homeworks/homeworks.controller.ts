@@ -34,7 +34,7 @@ export class HomeworksController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Yangi vazifa yaratish' })
   @ApiCreatedResponse({ description: 'Vazifa yaratildi' })
-  @ApiForbiddenResponse({ description: 'Siz bu guruh oʻqituvchisi emassiz' })
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
   create(@Body() dto: CreateHomeworkDto, @CurrentUser() user: AuthUser) {
     return this.homeworksService.create(dto, user);
   }
@@ -42,9 +42,9 @@ export class HomeworksController {
   @Get()
   @ApiOperation({
     summary:
-      'Vazifalar roʻyxati (ADMIN — hammasi, TEACHER va STUDENT — oʻz guruhlari)',
+      "Vazifalar ro'yxati (ADMIN — hammasi, TEACHER va STUDENT — o'z guruhlari)",
   })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryHomeworksDto, @CurrentUser() user: AuthUser) {
     return this.homeworksService.findAll(query, user);
   }
@@ -74,8 +74,8 @@ export class HomeworksController {
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiOperation({ summary: 'Vazifani oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Vazifani o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.homeworksService.remove(id, user);
   }

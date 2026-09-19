@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -41,4 +42,12 @@ export class CreateStudentDto {
   @IsOptional()
   @IsString()
   photo?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Login va parolni emailga yuborish',
+  })
+  @IsOptional()
+  @IsBoolean()
+  send_email?: boolean;
 }

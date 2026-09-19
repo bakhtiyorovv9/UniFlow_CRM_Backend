@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,6 +8,10 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { Role } from '../../common/enums/index.js';
 import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { ensureTeacherInGroup } from '../../common/utils/ensure-teacher-in-group.js';
+import {
+  ensureGroupOpen,
+  tashkentDayRange,
+} from '../../common/utils/group-rules.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { CreateAttendanceDto } from './dto/create-attendance.dto.js';
 import { QueryAttendanceDto } from './dto/query-attendance.dto.js';
@@ -18,6 +23,17 @@ export class AttendanceService {
 
   async create(dto: CreateAttendanceDto, currentUser: AuthUser) {
     const authorData = await this.resolveAuthor(currentUser, dto.group_id);
+    await ensureGroupOpen(this.prisma, dto.group_id);
+    await this.ensureStudentsInGroup(
+      dto.group_id,
+      dto.records.map((r) => r.student_id),
+    );
+    if (currentUser.role === Role.TEACHER) {
+      await this.ensureNotRecordedToday(
+        dto.group_id,
+        dto.records.map((r) => r.student_id),
+      );
+    }
 
     const created = await this.prisma.$transaction(
       dto.records.map((r) =>
@@ -81,10 +97,7 @@ export class AttendanceService {
   async update(id: number, dto: UpdateAttendanceDto, currentUser: AuthUser) {
     const record = await this.prisma.attendance.findUnique({ where: { id } });
     if (!record) throw new NotFoundException('Yozuv topilmadi');
-
-    if (currentUser.role === Role.TEACHER) {
-      await ensureTeacherInGroup(this.prisma, currentUser.id, record.group_id);
-    }
+    this.ensureAdmin(currentUser);
 
     return this.prisma.attendance.update({
       where: { id },
@@ -95,15 +108,10 @@ export class AttendanceService {
   async remove(id: number, currentUser: AuthUser) {
     const record = await this.prisma.attendance.findUnique({ where: { id } });
     if (!record) throw new NotFoundException('Yozuv topilmadi');
-
-    if (currentUser.role === Role.TEACHER) {
-      await ensureTeacherInGroup(this.prisma, currentUser.id, record.group_id);
-    }
+    this.ensureAdmin(currentUser);
 
     return this.prisma.attendance.delete({ where: { id } });
   }
-
-  // === yordamchi metodlar ===
 
   private async resolveAuthor(currentUser: AuthUser, group_id: number) {
     if (currentUser.role === Role.TEACHER) {
@@ -130,7 +138,6 @@ export class AttendanceService {
       return;
     }
 
-    // STUDENT — faqat o'z yozuvini
     if (currentUser.role === Role.STUDENT && currentUser.id !== student_id) {
       throw new ForbiddenException('Bu yozuv sizniki emas');
     }
@@ -154,7 +161,48 @@ export class AttendanceService {
       return { group_id: { in: links.map((l) => l.group_id) } };
     }
 
-    // STUDENT — faqat o'z yozuvlari
     return { student_id: currentUser.id };
+  }
+
+  private async ensureStudentsInGroup(group_id: number, studentIds: number[]) {
+    const unique = [...new Set(studentIds)];
+    if (unique.length !== studentIds.length) {
+      throw new BadRequestException('Bir talaba ikki marta yuborilgan');
+    }
+    const links = await this.prisma.studentGroup.count({
+      where: { group_id, status: 'active', student_id: { in: unique } },
+    });
+    if (links !== unique.length) {
+      throw new BadRequestException(
+        "Ro'yxatdagi ba'zi talabalar bu guruhda o'qimaydi",
+      );
+    }
+  }
+
+  private ensureAdmin(currentUser: AuthUser) {
+    if (
+      currentUser.role !== Role.ADMIN &&
+      currentUser.role !== Role.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        "Saqlangan davomatni faqat administrator o'zgartira oladi",
+      );
+    }
+  }
+
+  private async ensureNotRecordedToday(group_id: number, studentIds: number[]) {
+    const { start, end } = tashkentDayRange(new Date());
+    const existing = await this.prisma.attendance.count({
+      where: {
+        group_id,
+        student_id: { in: studentIds },
+        created_at: { gte: start, lt: end },
+      },
+    });
+    if (existing > 0) {
+      throw new ForbiddenException(
+        "Bugungi davomat allaqachon saqlangan. O'zgartirish uchun administratorga murojaat qiling",
+      );
+    }
   }
 }

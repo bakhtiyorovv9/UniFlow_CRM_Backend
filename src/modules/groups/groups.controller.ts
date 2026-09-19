@@ -12,13 +12,15 @@ import {
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../../common/decorators/index.js';
+import { CurrentUser, Roles } from '../../common/decorators/index.js';
 import { Role } from '../../common/enums/index.js';
+import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { CreateGroupDto } from './dto/create-groups.dto.js';
 import { QueryGroupsDto } from './dto/query-groups.dto.js';
 import { UpdateGroupDto } from './dto/update-groups.dto.js';
@@ -39,20 +41,29 @@ export class GroupsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Guruhlar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
-  findAll(@Query() query: QueryGroupsDto) {
-    return this.groupsService.findAll(query);
+  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER, Role.STUDENT)
+  @ApiOperation({
+    summary:
+      "Guruhlar ro'yxati (TEACHER — biriktirilgan guruhlar, STUDENT — o'qiyotgan guruhlari)",
+  })
+  @ApiOkResponse({ description: "Ro'yxat" })
+  findAll(@Query() query: QueryGroupsDto, @CurrentUser() user: AuthUser) {
+    return this.groupsService.findAll(query, user);
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Bitta guruh (kurs, xona, oʻqituvchilar, talabalar bilan)',
+    summary: "Bitta guruh (kurs, xona, o'qituvchilar, talabalar bilan)",
   })
   @ApiOkResponse({ description: 'Guruh maʼlumoti' })
+  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER, Role.STUDENT)
   @ApiNotFoundResponse({ description: 'Topilmadi' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.groupsService.findOne(id);
+  @ApiForbiddenResponse({ description: "Siz bu guruh o'qituvchisi emassiz" })
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.groupsService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -63,8 +74,12 @@ export class GroupsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Guruhni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @Roles(Role.SUPERADMIN)
+  @ApiOperation({
+    summary:
+      "Guruhni butunlay o'chirish (faqat SUPERADMIN): darslar, davomat, vazifalar, imtihonlar va videolar ham o'chadi",
+  })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.groupsService.remove(id);
   }

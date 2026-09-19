@@ -23,7 +23,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Tizimga kirish' })
   @ApiOkResponse({ description: 'Tokenlar qaytdi', type: TokensResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Email yoki parol notoʻgʻri' })
+  @ApiUnauthorizedResponse({ description: "Email yoki parol noto'g'ri" })
   @ApiForbiddenResponse({ description: 'Akkaunt faol emas' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -45,7 +45,7 @@ export class AuthController {
   @Get('me')
   @ApiOperation({ summary: 'Joriy foydalanuvchi maʼlumotlari' })
   @ApiOkResponse({ description: 'Foydalanuvchi maʼlumotlari (parolsiz)' })
-  @ApiUnauthorizedResponse({ description: 'Token yoʻq yoki yaroqsiz' })
+  @ApiUnauthorizedResponse({ description: "Token yo'q yoki yaroqsiz" })
   me(@CurrentUser() user: AuthUser) {
     return this.authService.me(user);
   }

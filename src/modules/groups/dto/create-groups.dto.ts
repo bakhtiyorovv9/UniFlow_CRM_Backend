@@ -47,7 +47,7 @@ export class CreateGroupDto {
   @ApiProperty({ example: '18:00', description: 'Boshlanish vaqti (HH:MM)' })
   @IsString()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
-    message: 'start_time HH:MM formatida boʻlishi kerak',
+    message: "start_time HH:MM formatida bo'lishi kerak",
   })
   start_time: string;
 

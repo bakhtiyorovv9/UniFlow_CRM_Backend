@@ -1,17 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../core/database/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { CreateStudentDto } from './dto/create-students.dto.js';
 import { QueryStudentsDto } from './dto/query-students.dto.js';
 import { UpdateStudentDto } from './dto/update-students.dto.js';
 
 @Injectable()
 export class StudentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
-  async create(dto: CreateStudentDto) {
-    return this.prisma.student.create({
+  async create({ send_email, ...dto }: CreateStudentDto) {
+    const created = await this.prisma.student.create({
       data: {
         ...dto,
         birth_date: new Date(dto.birth_date),
@@ -19,13 +27,20 @@ export class StudentsService {
       },
       omit: { password: true },
     });
+    return {
+      ...created,
+      ...(await this.notifyCredentials(created, dto.password, 'created', {
+        send_email,
+      })),
+    };
   }
 
   async findAll(query: QueryStudentsDto) {
-    const { page = 1, limit = 10, search, status } = query;
+    const { page = 1, limit = 10, search, status, archived } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.StudentWhereInput = {
+      archived_at: archived ? { not: null } : null,
       ...(status && { status }),
       ...(search && {
         OR: [
@@ -59,7 +74,7 @@ export class StudentsService {
     return student;
   }
 
-  async update(id: number, dto: UpdateStudentDto) {
+  async update(id: number, { send_email, ...dto }: UpdateStudentDto) {
     const data: Prisma.StudentUpdateInput = { ...dto };
     if (dto.password) {
       data.password = await bcrypt.hash(dto.password, 10);
@@ -68,17 +83,96 @@ export class StudentsService {
       data.birth_date = new Date(dto.birth_date);
     }
 
-    return this.prisma.student.update({
+    const updated = await this.prisma.student.update({
       where: { id },
       data,
       omit: { password: true },
     });
+    if (!dto.password) return updated;
+    return {
+      ...updated,
+      ...(await this.notifyCredentials(
+        updated,
+        dto.password,
+        'password_changed',
+        { send_email },
+      )),
+    };
   }
 
-  remove(id: number) {
-    return this.prisma.student.delete({
+  async archive(id: number) {
+    const student = await this.findOne(id);
+    if (student.archived_at) {
+      throw new BadRequestException('Talaba allaqachon arxivda');
+    }
+
+    const [, archived] = await this.prisma.$transaction([
+      this.prisma.studentGroup.updateMany({
+        where: { student_id: id, status: 'active' },
+        data: { status: 'inactive' },
+      }),
+      this.prisma.student.update({
+        where: { id },
+        data: { archived_at: new Date() },
+        omit: { password: true },
+      }),
+    ]);
+    return archived;
+  }
+
+  async restore(id: number) {
+    const student = await this.findOne(id);
+    if (!student.archived_at) {
+      throw new BadRequestException('Talaba arxivda emas');
+    }
+
+    return this.prisma.student.update({
       where: { id },
+      data: { archived_at: null },
       omit: { password: true },
     });
+  }
+
+  async remove(id: number) {
+    const student = await this.findOne(id);
+    if (!student.archived_at) {
+      throw new BadRequestException(
+        "Butunlay o'chirishdan oldin talabani arxivga yuboring",
+      );
+    }
+
+    const [, , , , deleted] = await this.prisma.$transaction([
+      this.prisma.homeworkResult.deleteMany({
+        where: { homeworkAnswerStudent: { student_id: id } },
+      }),
+      this.prisma.homeworkAnswerStudent.deleteMany({
+        where: { student_id: id },
+      }),
+      this.prisma.attendance.deleteMany({ where: { student_id: id } }),
+      this.prisma.payment.deleteMany({ where: { student_id: id } }),
+      this.prisma.student.delete({
+        where: { id },
+        omit: { password: true },
+      }),
+    ]);
+    return deleted;
+  }
+
+  private async notifyCredentials(
+    account: { full_name: string; email: string; phone: string },
+    password: string,
+    kind: 'created' | 'password_changed',
+    channels: { send_email?: boolean },
+  ) {
+    if (!channels.send_email) return {};
+    const email_result = await this.mail.sendCredentials({
+      name: account.full_name,
+      email: account.email,
+      phone: account.phone,
+      password,
+      role: 'student',
+      kind,
+    });
+    return { email_result };
   }
 }

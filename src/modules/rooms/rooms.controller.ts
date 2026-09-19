@@ -30,15 +30,15 @@ export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Yangi xona qoʻshish' })
+  @ApiOperation({ summary: "Yangi xona qo'shish" })
   @ApiCreatedResponse({ description: 'Xona yaratildi' })
   create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Xonalar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Xonalar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryRoomsDto) {
     return this.roomsService.findAll(query);
   }
@@ -59,8 +59,8 @@ export class RoomsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Xonani oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Xonani o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.roomsService.remove(id);
   }

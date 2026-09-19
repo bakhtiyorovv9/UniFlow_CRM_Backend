@@ -31,16 +31,16 @@ export class GroupTeachersController {
   constructor(private readonly groupTeachersService: GroupTeachersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Oʻqituvchini guruhga biriktirish' })
+  @ApiOperation({ summary: "O'qituvchini guruhga biriktirish" })
   @ApiCreatedResponse({ description: 'Biriktirildi' })
-  @ApiConflictResponse({ description: 'Bu oʻqituvchi allaqachon shu guruhda' })
+  @ApiConflictResponse({ description: "Bu o'qituvchi allaqachon shu guruhda" })
   create(@Body() dto: CreateGroupTeacherDto) {
     return this.groupTeachersService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Biriktirishlar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "Biriktirishlar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryGroupTeachersDto) {
     return this.groupTeachersService.findAll(query);
   }
@@ -55,7 +55,7 @@ export class GroupTeachersController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Status oʻzgartirish (active/inactive/planned/completed)',
+    summary: "Status o'zgartirish (active/inactive/planned/completed)",
   })
   @ApiOkResponse({ description: 'Yangilandi' })
   update(
@@ -66,8 +66,8 @@ export class GroupTeachersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Biriktirishni oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({ summary: "Biriktirishni o'chirish" })
+  @ApiOkResponse({ description: "O'chirildi" })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.groupTeachersService.remove(id);
   }

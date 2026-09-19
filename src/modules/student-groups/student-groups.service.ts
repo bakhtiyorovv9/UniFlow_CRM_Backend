@@ -29,7 +29,7 @@ export class StudentGroupsService {
 
     if (group._count.studentGroups >= group.max_student) {
       throw new BadRequestException(
-        `Guruh toʻlgan: ${group._count.studentGroups}/${group.max_student}`,
+        `Guruh to'lgan: ${group._count.studentGroups}/${group.max_student}`,
       );
     }
 

@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -30,21 +31,21 @@ export class TeachersController {
   constructor(private readonly teachersService: TeachersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Yangi oʻqituvchi qoʻshish' })
-  @ApiCreatedResponse({ description: 'Oʻqituvchi yaratildi' })
+  @ApiOperation({ summary: "Yangi o'qituvchi qo'shish" })
+  @ApiCreatedResponse({ description: "O'qituvchi yaratildi" })
   create(@Body() dto: CreateTeacherDto) {
     return this.teachersService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Oʻqituvchilar roʻyxati' })
-  @ApiOkResponse({ description: 'Roʻyxat' })
+  @ApiOperation({ summary: "O'qituvchilar ro'yxati" })
+  @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryTeachersDto) {
     return this.teachersService.findAll(query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Bitta oʻqituvchi' })
+  @ApiOperation({ summary: "Bitta o'qituvchi" })
   @ApiOkResponse({ description: 'Maʼlumot' })
   @ApiNotFoundResponse({ description: 'Topilmadi' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -52,15 +53,36 @@ export class TeachersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Oʻqituvchini yangilash' })
+  @ApiOperation({ summary: "O'qituvchini yangilash" })
   @ApiOkResponse({ description: 'Yangilandi' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTeacherDto) {
     return this.teachersService.update(id, dto);
   }
 
+  @Patch(':id/archive')
+  @ApiOperation({
+    summary: "O'qituvchini arxivga yuborish (guruhlardan chiqariladi)",
+  })
+  @ApiOkResponse({ description: 'Arxivga yuborildi' })
+  @ApiBadRequestResponse({ description: 'Allaqachon arxivda' })
+  archive(@Param('id', ParseIntPipe) id: number) {
+    return this.teachersService.archive(id);
+  }
+
+  @Patch(':id/restore')
+  @ApiOperation({ summary: "O'qituvchini arxivdan tiklash" })
+  @ApiOkResponse({ description: 'Tiklandi' })
+  @ApiBadRequestResponse({ description: 'Arxivda emas' })
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.teachersService.restore(id);
+  }
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Oʻqituvchini oʻchirish' })
-  @ApiOkResponse({ description: 'Oʻchirildi' })
+  @ApiOperation({
+    summary: "O'qituvchini butunlay o'chirish (faqat arxivdagilar)",
+  })
+  @ApiOkResponse({ description: "O'chirildi" })
+  @ApiBadRequestResponse({ description: 'Avval arxivga yuborish kerak' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.teachersService.remove(id);
   }

@@ -18,6 +18,10 @@ import { HomeworksModule } from './modules/homeworks/homeworks.module.js';
 import { HomeworkAnswersModule } from './modules/homework-answers/homework-answers.module.js';
 import { HomeworkResultsModule } from './modules/homework-results/homework-results.module.js';
 import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
+import { UploadsModule } from './modules/uploads/uploads.module.js';
+import { MailModule } from './modules/mail/mail.module.js';
+import { ExamsModule } from './modules/exams/exams.module.js';
 
 @Module({
   imports: [
@@ -38,6 +42,10 @@ import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module
     HomeworkAnswersModule,
     HomeworkResultsModule,
     LessonVideosModule,
+    PaymentsModule,
+    UploadsModule,
+    MailModule,
+    ExamsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

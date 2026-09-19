@@ -10,7 +10,7 @@ export class QueryLessonsDto extends PaginationDto {
   @IsEnum(Status)
   status?: Status;
 
-  @ApiPropertyOptional({ description: 'Guruh boʻyicha filtr' })
+  @ApiPropertyOptional({ description: "Guruh bo'yicha filtr" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

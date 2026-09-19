@@ -44,7 +44,7 @@ export class CreateUserDto {
     example: Role.ADMIN,
     description: 'Role: [ SUPERADMIN | ADMIN | TEACHER | STUDENT ]',
   })
-  @IsIn([Role.ADMIN, Role.SUPERADMIN, Role.STUDENT, Role.TEACHER])
+  @IsIn([Role.ADMIN, Role.SUPERADMIN])
   role: Role;
 
   @ApiProperty({ required: false, example: null })

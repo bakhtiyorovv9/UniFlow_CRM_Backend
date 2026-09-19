@@ -15,6 +15,15 @@ import type {
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
 
+type Account = {
+  id: number;
+  password: string;
+  status: string;
+  archived: boolean;
+  role: Role;
+  type: AccountType;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,15 +33,19 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
-    const account = await this.findAccount(dto.email);
-    const passwordOk = account
-      ? await bcrypt.compare(dto.password, account.password)
-      : false;
-
-    if (!account || !passwordOk) {
-      throw new UnauthorizedException("Email yoki parol noto'g'ri");
+    const identifier = (dto.login ?? dto.email ?? '').trim();
+    let account: Account | null = null;
+    for (const candidate of await this.findAccounts(identifier)) {
+      if (await bcrypt.compare(dto.password, candidate.password)) {
+        account = candidate;
+        break;
+      }
     }
-    if (account.status !== 'active') {
+
+    if (!account) {
+      throw new UnauthorizedException("Login yoki parol noto'g'ri");
+    }
+    if (account.status !== 'active' || account.archived) {
       throw new ForbiddenException('Akkaunt faol emas');
     }
 
@@ -83,40 +96,61 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  private async findAccount(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (user) {
-      return {
+  private async findAccounts(identifier: string): Promise<Account[]> {
+    if (!identifier) return [];
+    const byEmail = identifier.includes('@');
+    const phoneTail = identifier.replace(/\D/g, '').slice(-9);
+    if (!byEmail && phoneTail.length < 9) return [];
+
+    const [userIds, teacherIds, studentIds] = byEmail
+      ? [[], [], []]
+      : await Promise.all([
+          this.prisma.$queryRaw<
+            { id: number }[]
+          >`SELECT id FROM "User" WHERE right(regexp_replace(phone, '\\D', '', 'g'), 9) = ${phoneTail}`,
+          this.prisma.$queryRaw<
+            { id: number }[]
+          >`SELECT id FROM "Teacher" WHERE right(regexp_replace(phone, '\\D', '', 'g'), 9) = ${phoneTail}`,
+          this.prisma.$queryRaw<
+            { id: number }[]
+          >`SELECT id FROM "Student" WHERE right(regexp_replace(phone, '\\D', '', 'g'), 9) = ${phoneTail}`,
+        ]);
+    const where = (ids: { id: number }[]) =>
+      byEmail
+        ? { email: { equals: identifier, mode: 'insensitive' as const } }
+        : { id: { in: ids.map((row) => row.id) } };
+
+    const [users, teachers, students] = await Promise.all([
+      this.prisma.user.findMany({ where: where(userIds) }),
+      this.prisma.teacher.findMany({ where: where(teacherIds) }),
+      this.prisma.student.findMany({ where: where(studentIds) }),
+    ]);
+
+    return [
+      ...users.map((user) => ({
         id: user.id,
         password: user.password,
         status: user.status,
+        archived: false,
         role: user.role as Role,
         type: 'user' as AccountType,
-      };
-    }
-
-    const teacher = await this.prisma.teacher.findUnique({ where: { email } });
-    if (teacher) {
-      return {
+      })),
+      ...teachers.map((teacher) => ({
         id: teacher.id,
         password: teacher.password,
         status: teacher.status,
+        archived: Boolean(teacher.archived_at),
         role: Role.TEACHER,
         type: 'teacher' as AccountType,
-      };
-    }
-
-    const student = await this.prisma.student.findUnique({ where: { email } });
-    if (student) {
-      return {
+      })),
+      ...students.map((student) => ({
         id: student.id,
         password: student.password,
         status: student.status,
+        archived: Boolean(student.archived_at),
         role: Role.STUDENT,
         type: 'student' as AccountType,
-      };
-    }
-
-    return null;
+      })),
+    ];
   }
 }

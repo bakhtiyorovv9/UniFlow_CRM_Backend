@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -78,6 +79,17 @@ export class UsersService {
         'Faqat SUPERADMIN rolni SUPERADMIN qila oladi',
       );
     }
+    const target = await this.findTarget(id, currentUser);
+    if (
+      target.role === Role.SUPERADMIN &&
+      dto.role &&
+      dto.role !== Role.SUPERADMIN
+    ) {
+      await this.ensureAnotherSuperadmin(id);
+    }
+    if (id === currentUser.id && dto.status && dto.status !== 'active') {
+      throw new ForbiddenException("O'z akkauntingizni nofaol qila olmaysiz");
+    }
 
     const data: Prisma.UserUpdateInput = { ...dto };
     if (dto.password) {
@@ -95,9 +107,41 @@ export class UsersService {
     if (id === currentUser.id) {
       throw new ForbiddenException("O'zingizni o'chira olmaysiz");
     }
+    const target = await this.findTarget(id, currentUser);
+    if (target.role === Role.SUPERADMIN) {
+      await this.ensureAnotherSuperadmin(id);
+    }
     return this.prisma.user.delete({
       where: { id },
       omit: { password: true },
     });
+  }
+
+  private async findTarget(id: number, currentUser: AuthUser) {
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true },
+    });
+    if (!target) throw new NotFoundException('Foydalanuvchi topilmadi');
+    if (
+      target.role === Role.SUPERADMIN &&
+      currentUser.role !== Role.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        "SUPERADMIN ma'lumotlarini faqat SUPERADMIN o'zgartira oladi",
+      );
+    }
+    return target;
+  }
+
+  private async ensureAnotherSuperadmin(id: number) {
+    const others = await this.prisma.user.count({
+      where: { role: Role.SUPERADMIN, id: { not: id } },
+    });
+    if (others === 0) {
+      throw new BadRequestException(
+        'Tizimda kamida bitta SUPERADMIN qolishi kerak',
+      );
+    }
   }
 }

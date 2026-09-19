@@ -1,13 +1,29 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
-    description: 'Email manzil',
+    description: 'Email yoki telefon raqam',
+    example: '+998901234567',
+  })
+  @ValidateIf((dto: LoginDto) => !dto.email)
+  @IsString()
+  @IsNotEmpty({ message: 'Email yoki telefon raqamini kiriting' })
+  login?: string;
+
+  @ApiPropertyOptional({
+    description: "Eski mijozlar uchun: login o'rniga email",
     example: 'example@gmail.com',
   })
-  @IsEmail()
-  email: string;
+  @IsOptional()
+  @IsString()
+  email?: string;
 
   @ApiProperty({
     description: 'Parol',
