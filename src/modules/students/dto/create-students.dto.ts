@@ -7,7 +7,9 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateStudentDto {
   @ApiProperty({ example: 'Karimov Doston' })
@@ -24,9 +26,16 @@ export class CreateStudentDto {
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ example: '+998923336699' })
+  @ApiProperty({ example: '+998901234567' })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.replace(/[\s()-]/g, '') : value,
+  )
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\+\d{9,15}$/, {
+    message:
+      "Telefon raqam + bilan boshlanib, 9-15 ta raqamdan iborat bo'lishi kerak (masalan: +998901234567)",
+  })
   phone: string;
 
   @ApiProperty({ example: '2005-04-12', description: "Tug'ilgan sana (ISO)" })

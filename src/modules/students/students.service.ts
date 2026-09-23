@@ -35,6 +35,33 @@ export class StudentsService {
     };
   }
 
+  async counts() {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [byStatus, archived, newThisMonth] = await Promise.all([
+      this.prisma.student.groupBy({
+        by: ['status'],
+        where: { archived_at: null },
+        _count: { _all: true },
+      }),
+      this.prisma.student.count({ where: { archived_at: { not: null } } }),
+      this.prisma.student.count({
+        where: { archived_at: null, created_at: { gte: monthStart } },
+      }),
+    ]);
+
+    const counts = { active: 0, inactive: 0, freeze: 0, graduated: 0 };
+    let all = 0;
+    for (const row of byStatus) {
+      counts[row.status] = row._count._all;
+      all += row._count._all;
+    }
+
+    return { all, ...counts, archived, new_this_month: newThisMonth };
+  }
+
   async findAll(query: QueryStudentsDto) {
     const { page = 1, limit = 10, search, status, archived } = query;
     const skip = (page - 1) * limit;
@@ -58,6 +85,16 @@ export class StudentsService {
         take: limit,
         orderBy: { created_at: 'desc' },
         omit: { password: true },
+        include: {
+          studentGroups: {
+            where: { status: 'active' },
+            select: {
+              id: true,
+              group_id: true,
+              groups: { select: { id: true, name: true } },
+            },
+          },
+        },
       }),
       this.prisma.student.count({ where }),
     ]);

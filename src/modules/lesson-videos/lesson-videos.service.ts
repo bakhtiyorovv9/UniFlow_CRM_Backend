@@ -66,14 +66,21 @@ export class LessonVideosService {
     });
   }
 
-  async findAll(currentUser: AuthUser, lesson_id?: number) {
+  async findAll(
+    currentUser: AuthUser,
+    lesson_id?: number,
+    group_id?: number,
+    limit?: number,
+  ) {
     const where: Prisma.LessonVideoWhereInput = {
       ...(lesson_id && { lesson_id }),
+      ...(group_id && { group_id }),
       ...(await this.buildAccessFilter(currentUser)),
     };
 
     return this.prisma.lessonVideo.findMany({
       where,
+      ...(limit && { take: limit }),
       orderBy: { created_at: 'desc' },
       include: {
         lesson: { select: { id: true, topic: true } },

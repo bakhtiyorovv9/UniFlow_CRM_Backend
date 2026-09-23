@@ -82,6 +82,7 @@ export class HomeworkAnswersService {
       homeworkStatus,
       homework_id,
       student_id,
+      group_id,
     } = query;
     const skip = (page - 1) * limit;
 
@@ -89,6 +90,7 @@ export class HomeworkAnswersService {
       ...(homeworkStatus && { homeworkStatus }),
       ...(homework_id && { homework_id }),
       ...(student_id && { student_id }),
+      ...(group_id && { homework: { group_id } }),
       ...(await this.buildAccessFilter(currentUser)),
     };
 

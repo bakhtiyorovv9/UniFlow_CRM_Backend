@@ -33,6 +33,7 @@ export class CoursesService {
         skip,
         take: limit,
         orderBy: { created_at: 'desc' },
+        include: { _count: { select: { groups: true } } },
       }),
       this.prisma.course.count({ where }),
     ]);

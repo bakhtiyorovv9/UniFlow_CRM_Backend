@@ -70,7 +70,7 @@ export class GroupsService {
         take: limit,
         orderBy: { created_at: 'desc' },
         include: {
-          courses: { select: { id: true, name: true } },
+          courses: { select: { id: true, name: true, duration_month: true } },
           rooms: { select: { id: true, name: true } },
           GroupTeacher: {
             where: { status: 'active' },

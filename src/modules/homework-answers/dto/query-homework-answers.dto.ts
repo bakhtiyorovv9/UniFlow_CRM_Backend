@@ -21,4 +21,10 @@ export class QueryHomeworkAnswersDto extends PaginationDto {
   @Type(() => Number)
   @IsInt()
   student_id?: number;
+
+  @ApiPropertyOptional({ description: "Guruh bo'yicha filtr" })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  group_id?: number;
 }

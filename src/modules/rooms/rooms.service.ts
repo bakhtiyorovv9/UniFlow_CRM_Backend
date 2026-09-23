@@ -30,6 +30,13 @@ export class RoomsService {
         skip,
         take: limit,
         orderBy: { created_at: 'desc' },
+        include: {
+          _count: {
+            select: {
+              groups: { where: { status: { in: ['active', 'planned'] } } },
+            },
+          },
+        },
       }),
       this.prisma.room.count({ where }),
     ]);

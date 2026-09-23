@@ -15,7 +15,18 @@ import {
 import { PrismaService } from '../../core/database/prisma.service.js';
 import { CreateAttendanceDto } from './dto/create-attendance.dto.js';
 import { QueryAttendanceDto } from './dto/query-attendance.dto.js';
+import { SummaryAttendanceDto } from './dto/summary-attendance.dto.js';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto.js';
+
+function dateRange(from?: string, to?: string): Prisma.AttendanceWhereInput {
+  if (!from && !to) return {};
+  return {
+    created_at: {
+      ...(from && { gte: new Date(from) }),
+      ...(to && { lte: new Date(to) }),
+    },
+  };
+}
 
 @Injectable()
 export class AttendanceService {
@@ -52,12 +63,13 @@ export class AttendanceService {
   }
 
   async findAll(query: QueryAttendanceDto, currentUser: AuthUser) {
-    const { page = 1, limit = 10, group_id, student_id } = query;
+    const { page = 1, limit = 10, group_id, student_id, from, to } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.AttendanceWhereInput = {
       ...(group_id && { group_id }),
       ...(student_id && { student_id }),
+      ...dateRange(from, to),
       ...(await this.buildAccessFilter(currentUser)),
     };
 
@@ -141,6 +153,53 @@ export class AttendanceService {
     if (currentUser.role === Role.STUDENT && currentUser.id !== student_id) {
       throw new ForbiddenException('Bu yozuv sizniki emas');
     }
+  }
+
+  async summary(query: SummaryAttendanceDto, currentUser: AuthUser) {
+    const { by = 'group', from, to, group_id } = query;
+    const where: Prisma.AttendanceWhereInput = {
+      ...(group_id && { group_id }),
+      ...dateRange(from, to),
+      ...(await this.buildAccessFilter(currentUser)),
+    };
+
+    const rows =
+      by === 'student'
+        ? (
+            await this.prisma.attendance.groupBy({
+              by: ['student_id', 'isPresent'],
+              where,
+              _count: { _all: true },
+            })
+          ).map((row) => ({
+            id: row.student_id,
+            isPresent: row.isPresent,
+            count: row._count._all,
+          }))
+        : (
+            await this.prisma.attendance.groupBy({
+              by: ['group_id', 'isPresent'],
+              where,
+              _count: { _all: true },
+            })
+          ).map((row) => ({
+            id: row.group_id,
+            isPresent: row.isPresent,
+            count: row._count._all,
+          }));
+
+    const totals = new Map<
+      number,
+      { id: number; present: number; total: number }
+    >();
+    for (const row of rows) {
+      const entry = totals.get(row.id) ?? { id: row.id, present: 0, total: 0 };
+      entry.total += row.count;
+      if (row.isPresent) entry.present += row.count;
+      totals.set(row.id, entry);
+    }
+
+    return { by, items: [...totals.values()] };
   }
 
   private async buildAccessFilter(

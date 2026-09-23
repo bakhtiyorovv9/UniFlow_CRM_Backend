@@ -23,6 +23,7 @@ import type { AuthUser } from '../../common/types/jwt-payload.type.js';
 import { AttendanceService } from './attendance.service.js';
 import { CreateAttendanceDto } from './dto/create-attendance.dto.js';
 import { QueryAttendanceDto } from './dto/query-attendance.dto.js';
+import { SummaryAttendanceDto } from './dto/summary-attendance.dto.js';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto.js';
 
 @ApiTags('attendance')
@@ -50,6 +51,16 @@ export class AttendanceController {
   @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: QueryAttendanceDto, @CurrentUser() user: AuthUser) {
     return this.attendanceService.findAll(query, user);
+  }
+
+  @Get('summary')
+  @ApiOperation({
+    summary:
+      "Davomat jamlanmasi: guruh yoki talaba kesimida kelgan/jami soni (ro'yxatni to'liq yuklamasdan)",
+  })
+  @ApiOkResponse({ description: 'Jamlanma' })
+  summary(@Query() query: SummaryAttendanceDto, @CurrentUser() user: AuthUser) {
+    return this.attendanceService.summary(query, user);
   }
 
   @Get(':id')

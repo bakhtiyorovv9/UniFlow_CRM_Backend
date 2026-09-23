@@ -40,6 +40,18 @@ class ListQueryDto {
   @IsInt()
   @Min(1)
   lesson_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  group_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
 }
 
 @ApiTags('lesson-videos')
@@ -112,7 +124,12 @@ export class LessonVideosController {
   })
   @ApiOkResponse({ description: "Ro'yxat" })
   findAll(@Query() query: ListQueryDto, @CurrentUser() user: AuthUser) {
-    return this.lessonVideosService.findAll(user, query.lesson_id);
+    return this.lessonVideosService.findAll(
+      user,
+      query.lesson_id,
+      query.group_id,
+      query.limit,
+    );
   }
 
   @Get(':id')

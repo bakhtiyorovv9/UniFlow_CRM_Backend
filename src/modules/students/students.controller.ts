@@ -44,6 +44,16 @@ export class StudentsController {
     return this.studentsService.findAll(query);
   }
 
+  @Get('counts')
+  @ApiOperation({
+    summary:
+      "Holat bo'yicha talabalar soni (filtr chiplari uchun bitta so'rov)",
+  })
+  @ApiOkResponse({ description: 'Sonlar' })
+  counts() {
+    return this.studentsService.counts();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Bitta talaba' })
   @ApiOkResponse({ description: 'Maʼlumot' })

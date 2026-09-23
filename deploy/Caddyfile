@@ -3,7 +3,7 @@
 encode gzip zstd
 
 request_body {
-	max_size 600MB
+	max_size 200MB
 }
 
 handle /api/* {
