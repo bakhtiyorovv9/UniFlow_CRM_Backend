@@ -44,6 +44,16 @@ export class TeachersController {
     return this.teachersService.findAll(query);
   }
 
+  @Get('counts')
+  @ApiOperation({
+    summary:
+      "Holat bo'yicha o'qituvchilar soni (filtr chiplari uchun bitta so'rov)",
+  })
+  @ApiOkResponse({ description: 'Sonlar' })
+  counts() {
+    return this.teachersService.counts();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: "Bitta o'qituvchi" })
   @ApiOkResponse({ description: 'Maʼlumot' })

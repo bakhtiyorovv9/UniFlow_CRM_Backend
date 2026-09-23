@@ -27,7 +27,11 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads',
+    maxAge: '365d',
+    immutable: true,
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('UniFlow API')

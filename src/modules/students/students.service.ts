@@ -99,7 +99,32 @@ export class StudentsService {
       this.prisma.student.count({ where }),
     ]);
 
-    return { items, total, page, limit };
+    const ids = items.map((item) => item.id);
+    const rows = ids.length
+      ? await this.prisma.attendance.groupBy({
+          by: ['student_id', 'isPresent'],
+          where: { student_id: { in: ids } },
+          _count: { _all: true },
+        })
+      : [];
+
+    const byStudent = new Map<number, { present: number; total: number }>();
+    for (const row of rows) {
+      const entry = byStudent.get(row.student_id) ?? { present: 0, total: 0 };
+      entry.total += row._count._all;
+      if (row.isPresent) entry.present += row._count._all;
+      byStudent.set(row.student_id, entry);
+    }
+
+    return {
+      items: items.map((item) => ({
+        ...item,
+        attendance: byStudent.get(item.id) ?? { present: 0, total: 0 },
+      })),
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: number) {
